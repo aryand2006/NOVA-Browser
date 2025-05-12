@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horizon Browser</title>
+  <style>
+    :root {
+      --primary: #3a86ff;
+      --secondary: #8338ec;
+      --accent: #ff006e;
+      --background: #ffffff;
+      --surface: #f8f9fa;
+      --text: #212529;
+      --text-secondary: #6c757d;
+      --border: #dee2e6;
+      --shadow: rgba(0, 0, 0, 0.05);
+    }
+
+    .dark-mode {
+      --primary: #3a86ff;
+      --secondary: #8338ec;
+      --accent: #ff006e;
+      --background: #121212;
+      --surface: #1e1e1e;
+      --text: #f8f9fa;
+      --text-secondary: #adb5bd;
+      --border: #2d2d2d;
+      --shadow: rgba(0, 0, 0, 0.2);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body {
+      background-color: var(--background);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .browser-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100%;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      padding: 8px 16px;
+      background-color: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      margin-right: 16px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-icon::after {
+      content: "";
+      position: absolute;
+      width: 24px;
+      height: 12px;
+      background-color: var(--background);
+      bottom: -4px;
+      left: 4px;
+      border-radius: 50% 50% 0 0;
+    }
+
+    .search-bar {
+      flex: 1;
+      height: 40px;
+      border-radius: 20px;
+      background-color: var(--background);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+
+    .search-bar:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(58, 134, 255, 0.2);
+    }
+
+    .search-bar input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      outline: none;
+      color: var(--text);
+      font-size: 14px;
+      padding: 8px 0;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      margin-left: 16px;
+      gap: 16px;
+    }
+
+    .action-button {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: transparent;
+      color: var(--text-secondary);
+      border: none;
+      cursor: pointer;
+    }
+
+    .action-button:hover {
+      background-color: var(--border);
+    }
+
+    .theme-toggle {
+      width: 40px;
+      height: 24px;
+      background-color: var(--border);
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .theme-toggle::after {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background-color: var(--background);
+      border-radius: 50%;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.3s;
+    }
+
+    .dark-mode .theme-toggle::after {
+      transform: translateX(16px);
+    }
+
+    .main-content {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 64px;
+      background-color: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 0;
+      transition: width 0.3s;
+    }
+
+    .sidebar.expanded {
+      width: 220px;
+    }
+
+    .sidebar-item {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      color: var(--text-secondary);
+      position: relative;
+      cursor: pointer;
+    }
+
+    .sidebar-item:hover {
+      background-color: var(--border);
+      color: var(--text);
+    }
+
+    .sidebar-item.active {
+      background-color: rgba(58, 134, 255, 0.1);
+      color: var(--primary);
+    }
+
+    .sidebar-item span {
+      position: absolute;
+      left: 48px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .sidebar.expanded .sidebar-item span {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tab-bar {
+      display: flex;
+      align-items: center;
+      height: 40px;
+      background-color: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .tab-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab {
+      height: 32px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      border-radius: 8px 8px 0 0;
+      margin-right: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      min-width: 100px;
+      max-width: 160px;
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      color: var(--text-secondary);
+      background-color: var(--surface);
+    }
+
+    .tab.active {
+      background-color: var(--background);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-bottom: none;
+    }
+
+    .tab:hover {
+      background-color: var(--background);
+    }
+
+    .tab-close {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 8px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .tab:hover .tab-close {
+      opacity: 1;
+    }
+
+    .new-tab {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 8px;
+      background-color: transparent;
+      color: var(--text-secondary);
+      border: none;
+      cursor: pointer;
+    }
+
+    .new-tab:hover {
+      background-color: var(--border);
+    }
+
+    .browser-view {
+      flex: 1;
+      background-color: var(--background);
+      position: relative;
+      display: flex;
+    }
+
+    .browser-frame {
+      flex: 1;
+      border: none;
+    }
+
+    .split-view .browser-frame {
+      flex: 0.5;
+    }
+
+    .search-results {
+      padding: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .search-stats {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .result {
+      margin-bottom: 24px;
+    }
+
+    .result-title {
+      font-size: 18px;
+      color: var(--primary);
+      margin-bottom: 8px;
+      text-decoration: none;
+    }
+
+    .result-url {
+      font-size: 12px;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .result-description {
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    .command-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      background-color: var(--surface);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      padding: 16px;
+      display: none;
+    }
+
+    .command-input {
+      width: 100%;
+      height: 48px;
+      border-radius: 8px;
+      background-color: var(--background);
+      border: 1px solid var(--border);
+      padding: 0 16px;
+      font-size: 16px;
+      color: var(--text);
+      outline: none;
+    }
+
+    .command-results {
+      margin-top: 16px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .command-item {
+      padding: 8px 16px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .command-item:hover {
+      background-color: var(--border);
+    }
+
+    .command-icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 12px;
+      color: var(--text-secondary);
+    }
+
+    .command-text {
+      flex: 1;
+    }
+
+    .command-shortcut {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .workspace-popup {
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 400px;
+      background-color: var(--surface);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      padding: 24px;
+      display: none;
+    }
+
+    .workspace-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .workspace-list {
+      margin-bottom: 16px;
+    }
+
+    .workspace-item {
+      padding: 12px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+
+    .workspace-item:hover {
+      background-color: var(--border);
+    }
+
+    .workspace-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background-color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      margin-right: 12px;
+    }
+
+    .workspace-info {
+      flex: 1;
+    }
+
+    .workspace-name {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .workspace-tabs {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .create-workspace {
+      width: 100%;
+      height: 40px;
+      border-radius: 8px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .create-workspace:hover {
+      background-color: #2a75e8;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    /* Features showcase */
+    .features-container {
+      margin: 40px auto;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .feature {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .feature-icon {
+      width: 64px;
+      height: 64px;
+      background-color: rgba(58, 134, 255, 0.1);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--primary);
+    }
+
+    .feature-content {
+      flex: 1;
+    }
+
+    .feature-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .feature-description {
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="browser-container">
+    <div class="topbar">
+      <div class="logo">
+        <div class="logo-icon"></div>
+      </div>
+      <div class="search-bar">
+        <input type="text" placeholder="Search or enter URL" value="How does quantum computing work?">
+      </div>
+      <div class="actions">
+        <button class="action-button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+          </svg>
+        </button>
+        <button class="action-button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </button>
+        <div class="theme-toggle" onclick="document.body.classList.toggle('dark-mode')"></div>
+      </div>
+    </div>
+    <div class="main-content">
+      <div class="sidebar">
+        <div class="sidebar-item active">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>Home</span>
+        </div>
+        <div class="sidebar-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="10 8 16 12 10 16 10 8"></polygon>
+          </svg>
+          <span>Quick Actions</span>
+        </div>
+        <div class="sidebar-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>Bookmarks</span>
+        </div>
+        <div class="sidebar-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+            <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+          </svg>
+          <span>Workspaces</span>
+        </div>
+        <div class="sidebar-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>Settings</span>
+        </div>
+        <div class="sidebar-item" style="margin-top: auto;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Expand</span>
+        </div>
+      </div>
+      <div class="content-area">
+        <div class="tab-bar">
+          <div class="tab active">
+            Quantum Computing
+            <div class="tab-close">×</div>
+          </div>
+          <div class="tab">
+            GitHub: Project
+            <div class="tab-close">×</div>
+          </div>
+          <div class="tab">
+            AI Research
+            <div class="tab-close">×</div>
+          </div>
+          <button class="new-tab">+</button>
+        </div>
+        <div class="browser-view">
+          <div class="browser-frame">
+            <div class="search-results">
+              <div class="search-stats">About 48,300,000 results (0.39 seconds)</div>
+              
+              <div class="result">
+                <div class="result-title">Quantum Computing Explained: The Basics of Quantum Information</div>
+                <div class="result-url">https://quantum.research.org/explanations/quantum-computing-basics</div>
+                <div class="result-description">Quantum computing is a type of computing that uses quantum-mechanical phenomena, such as superposition and entanglement, to perform operations on data. Unlike classical computers that use bits, quantum computers use quantum bits or "qubits" which can represent multiple states simultaneously.</div>
+              </div>
+              
+              <div class="result">
+                <div class="result-title">How Do Quantum Computers Actually Work? - MIT Technology Review</div>
+                <div class="result-url">https://www.technologyreview.com/quantum-computing-explained</div>
+                <div class="result-description">Quantum computers harness entangled qubits to perform computations that would be much more difficult or practically impossible for classical computers. This could revolutionize fields like cryptography, material science, and drug development by solving previously intractable problems.</div>
+              </div>
+              
+              <div class="result">
+                <div class="result-title">Quantum Computing Applications: What Can Quantum Computers Do?</div>
+                <div class="result-url">https://quantum-applications.science/practical-uses</div>
+                <div class="result-description">The potential applications of quantum computing include optimization problems, machine learning, cryptography and security, material science, and pharmaceutical research. These computers excel at simulating quantum systems that traditional computers struggle to model accurately.</div>
+              </div>
+              
+              <div class="features-container">
+                <div class="feature">
+                  <div class="feature-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 20h9"></path>
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                  </div>
+                  <div class="feature-content">
+                    <div class="feature-title">Smart Workspaces</div>
+                    <div class="feature-description">Horizon automatically organizes your tabs into contextual workspaces based on your browsing patterns. Each workspace maintains its own settings, extensions, and saved state.</div>
+                  </div>
+                </div>
+                
+                <div class="feature">
+                  <div class="feature-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="3" y1="9" x2="21" y2="9"></line>
+                      <line x1="9" y1="21" x2="9" y2="9"></line>
+                    </svg>
+                  </div>
+                  <div class="feature-content">
+                    <div class="feature-title">Fluid Split View</div>
+                    <div class="feature-description">Compare information side by side with intuitive split-view browsing. Drag and drop tabs to create custom layouts that adapt to your workflow.</div>
+                  </div>
+                </div>
+                
+                <div class="feature">
+                  <div class="feature-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                  </div>
+                  <div class="feature-content">
+                    <div class="feature-title">Focus Mode</div>
+                    <div class="feature-description">Eliminate distractions with a customizable focus mode that dims unnecessary UI elements and blocks notifications to help you stay in the flow.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="command-center">
+    <input type="text" class="command-input" placeholder="Type a command or search..." autofocus>
+    <div class="command-results">
+      <div class="command-item">
+        <div class="command-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </div>
+        <div class="command-text">Search for "quantum physics"</div>
+        <div class="command-shortcut">Enter</div>
+      </div>
+      <div class="command-item">
+        <div class="command-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="3" y1="9" x2="21" y2="9"></line>
+            <line x1="9" y1="21" x2="9" y2="9"></line>
+          </svg>
+        </div>
+        <div class="command-text">Split View</div>
+        <div class="command-shortcut">⌘+\\</div>
+      </div>
+      <div class="command-item">
+        <div class="command-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+        <div class="command-text">Save Current Page to Bookmarks</div>
+        <div class="command-shortcut">⌘+D</div>
+      </div>
+      <div class="command-item">
+        <div class="command-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+        </div>
+        <div class="command-text">Enable Privacy Mode</div>
+        <div class="command-shortcut">⌘+⇧+P</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="workspace-popup">
+    <div class="workspace-title">Your Workspaces</div>
+    <div class="workspace-list">
+      <div class="workspace-item">
+        <div class="workspace-icon">W</div>
+        <div class="workspace-info">
+          <div class="workspace-name">Work</div>
+          <div class="workspace-tabs">9 tabs - Last used today</div>
+        </div>
+      </div>
+      <div class="workspace-item">
+        <div class="workspace-icon">R</div>
+        <div class="workspace-info">
+          <div class="workspace-name">Research</div>
+          <div class="workspace-tabs">12 tabs - Last used yesterday</div>
+        </div>
+      </div>
+      <div class="workspace-item">
+        <div class="workspace-icon">S</div>
+        <div class="workspace-info">
+          <div class="workspace-name">Social</div>
+          <div class="workspace-tabs">4 tabs - Last used 3 days ago</div>
+        </div>
+      </div>
+      <div class="workspace-item">
+        <div class="workspace-icon" style="background-color: var(--accent);">P</div>
+        <div class="workspace-info">
+          <div class="workspace-name">Personal Projects</div>
+          <div class="workspace-tabs">7 tabs - Last used today</div>
+        </div>
+      </div>
+      <div class="workspace-item">
+        <div class="workspace-icon" style="background-color: #10b981;">L</div>
+        <div class="workspace-info">
+          <div class="workspace-name">Learning</div>
+          <div class="workspace-tabs">5 tabs - Active now</div>
+        </div>
+      </div>
+    </div>
+    <button class="create-workspace">Create New Workspace</button>
+  </div>
+
+  <!-- Command palette with enhanced functionality -->
+  <div class="command-center" id="commandCenter">
+    <input type="text" class="command-input" id="commandInput" placeholder="Type a command or search..." autofocus>
+    <div class="command-results">
+      <!-- Dynamic results will be populated here -->
+    </div>
+  </div>
+  
+  <!-- Focus mode overlay -->
+  <div class="focus-mode-overlay" id="focusModeOverlay">
+    <div class="focus-mode-message">
+      <h3>Focus Mode Activated</h3>
+      <p>Distractions minimized. Notifications paused.</p>
+      <button id="exitFocusMode">Exit Focus Mode</button>
+    </div>
+  </div>
+  
+  <!-- Tab Preview when hovering -->
+  <div class="tab-preview" id="tabPreview">
+    <div class="tab-preview-header">
+      <img src="" alt="" class="tab-preview-favicon">
+      <span class="tab-preview-title"></span>
+    </div>
+    <div class="tab-preview-content">
+      <img src="" alt="" class="tab-preview-thumbnail">
+    </div>
+  </div>
+  
+  <script>
+    // Enhanced browser interactions
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeBrowser();
+    });
+    
+    function initializeBrowser() {
+      // Theme toggle with system preference detection
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+      if (prefersDark.matches) {
+        document.body.classList.add('dark-mode');
+      }
+      
+      document.querySelector('.theme-toggle').addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        saveUserPreferences();
+      });
+      
+      // Sidebar expansion with animation
+      document.querySelector('.sidebar-item:last-child').addEventListener('click', function() {
+        const sidebar = document.querySelector('.sidebar');
+        sidebar.classList.toggle('expanded');
+        
+        // Update icon for better UX
+        const expandIcon = this.querySelector('svg');
+        if (sidebar.classList.contains('expanded')) {
+          expandIcon.innerHTML = '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14" /><polyline points="8 17 3 12 8 7" /><line x1="3" y1="12" x2="21" y2="12" />';
+        } else {
+          expandIcon.innerHTML = '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />';
+        }
+        
+        saveUserPreferences();
+      });
+      
+      // Command center activation with Cmd+K / Ctrl+K
+      document.addEventListener('keydown', function(e) {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+          e.preventDefault();
+          toggleCommandCenter();
+        }
+        
+        // Escape key to close modals
+        if (e.key === 'Escape') {
+          const commandCenter = document.getElementById('commandCenter');
+          const workspacePopup = document.querySelector('.workspace-popup');
+          const focusMode = document.getElementById('focusModeOverlay');
+          
+          if (commandCenter.style.display === 'block') {
+            commandCenter.style.display = 'none';
+          } else if (workspacePopup.style.display === 'block') {
+            workspacePopup.style.display = 'none';
+          } else if (focusMode.classList.contains('active')) {
+            toggleFocusMode();
+          }
+        }
+      });
+      
+      // Setup command center functionality
+      setupCommandCenter();
+      
+      // Tab hover preview
+      setupTabPreviews();
+      
+      // Enable workspace switching
+      setupWorkspaces();
+      
+      // Enable tab dragging
+      setupTabDragging();
+      
+      // Load user preferences
+      loadUserPreferences();
+    }
+    
+    function toggleCommandCenter() {
+      const commandCenter = document.getElementById('commandCenter');
+      const commandInput = document.getElementById('commandInput');
+      
+      if (commandCenter.style.display === 'block') {
+        commandCenter.style.display = 'none';
+      } else {
+        commandCenter.style.display = 'block';
+        commandInput.focus();
+        populateCommandResults('');
+      }
+    }
+    
+    function setupCommandCenter() {
+      const commandInput = document.getElementById('commandInput');
+      commandInput.addEventListener('input', function() {
+        populateCommandResults(this.value);
+      });
+      
+      // Initial suggestions
+      populateCommandResults('');
+    }
+    
+    function populateCommandResults(query) {
+      const results = document.querySelector('.command-results');
+      results.innerHTML = '';
+      
+      // Common commands
+      const commands = [
+        {
+          icon: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+          text: 'Search for "' + (query || 'anything') + '"',
+          shortcut: 'Enter',
+          action: function() { search(query); }
+        },
+        {
+          icon: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>',
+          text: 'Toggle Split View',
+          shortcut: '⌘+\\',
+          action: function() { toggleSplitView(); }
+        },
+        {
+          icon: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>',
+          text: 'Toggle Focus Mode',
+          shortcut: '⌘+⇧+F',
+          action: function() { toggleFocusMode(); }
+        },
+        {
+          icon: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M7 15h0M12 15h0M17 15h0" /></svg>',
+          text: 'Show Workspaces',
+          shortcut: '⌘+⇧+W',
+          action: function() { toggleWorkspacePopup(); }
+        }
+      ];
+      
+      // Filter commands based on query
+      const filtered = query ? commands.filter(cmd => 
+        cmd.text.toLowerCase().includes(query.toLowerCase())
+      ) : commands;
+      
+      // Add command items
+      filtered.forEach(command => {
+        const item = document.createElement('div');
+        item.className = 'command-item';
+        item.innerHTML = `
+          <div class="command-icon">${command.icon}</div>
+          <div class="command-text">${command.text}</div>
+          <div class="command-shortcut">${command.shortcut}</div>
+        `;
+        item.addEventListener('click', function() {
+          document.getElementById('commandCenter').style.display = 'none';
+          command.action();
+        });
+        results.appendChild(item);
+      });
+    }
+    
+    function search(query) {
+      console.log('Searching for:', query);
+      document.querySelector('.search-bar input').value = query;
+      // In a real implementation, this would trigger a search
+    }
+    
+    function toggleSplitView() {
+      const browserView = document.querySelector('.browser-view');
+      browserView.classList.toggle('split-view');
+      
+      // If enabling split view, create a second frame if it doesn't exist
+      if (browserView.classList.contains('split-view')) {
+        if (browserView.querySelectorAll('.browser-frame').length === 1) {
+          const newFrame = document.createElement('div');
+          newFrame.className = 'browser-frame';
+          newFrame.innerHTML = '<div class="search-results"><div class="search-stats">Ready for split view content</div></div>';
+          browserView.appendChild(newFrame);
+        }
+      }
+    }
+    
+    function toggleFocusMode() {
+      const overlay = document.getElementById('focusModeOverlay');
+      overlay.classList.toggle('active');
+      
+      if (overlay.classList.contains('active')) {
+        // Enable focus mode
+        document.body.classList.add('focus-mode');
+        
+        // Exit focus mode button
+        document.getElementById('exitFocusMode').addEventListener('click', function() {
+          toggleFocusMode();
+        });
+      } else {
+        document.body.classList.remove('focus-mode');
+      }
+    }
+    
+    function toggleWorkspacePopup() {
+      const popup = document.querySelector('.workspace-popup');
+      popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+      
+      if (popup.style.display === 'block') {
+        popup.classList.add('fade-in');
+      } else {
+        popup.classList.remove('fade-in');
+      }
+    }
+    
+    function setupTabPreviews() {
+      const tabs = document.querySelectorAll('.tab');
+      const preview = document.getElementById('tabPreview');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('mouseenter', function(e) {
+          // In a real implementation, we would load actual tab data
+          preview.querySelector('.tab-preview-title').textContent = this.textContent.trim().split('×')[0];
+          
+          // Position the preview
+          const rect = this.getBoundingClientRect();
+          preview.style.top = (rect.bottom + 8) + 'px';
+          preview.style.left = rect.left + 'px';
+          
+          // Show with slight delay for better UX
+          setTimeout(() => {
+            preview.classList.add('visible');
+          }, 300);
+        });
+        
+        tab.addEventListener('mouseleave', function() {
+          preview.classList.remove('visible');
+        });
+      });
+    }
+    
+    function setupWorkspaces() {
+      const workspaceItems = document.querySelectorAll('.workspace-item');
+      
+      workspaceItems.forEach(item => {
+        item.addEventListener('click', function() {
+          // In a real implementation, this would switch workspaces
+          const name = this.querySelector('.workspace-name').textContent;
+          alert(`Switching to workspace: ${name}`);
+          document.querySelector('.workspace-popup').style.display = 'none';
+        });
+      });
+      
+      document.querySelector('.create-workspace').addEventListener('click', function() {
+        // In a real implementation, this would open a create workspace dialog
+        alert('Creating a new workspace');
+        document.querySelector('.workspace-popup').style.display = 'none';
+      });
+    }
+    
+    function setupTabDragging() {
+      const tabs = document.querySelectorAll('.tab');
+      const tabBar = document.querySelector('.tab-bar');
+      
+      tabs.forEach(tab => {
+        tab.setAttribute('draggable', true);
+        
+        tab.addEventListener('dragstart', function(e) {
+          e.dataTransfer.setData('text/plain', this.textContent.trim());
+          this.classList.add('dragging');
+        });
+        
+        tab.addEventListener('dragend', function() {
+          this.classList.remove('dragging');
+        });
+      });
+      
+      tabBar.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        const draggingTab = document.querySelector('.dragging');
+        if (draggingTab) {
+          const siblings = [...document.querySelectorAll('.tab:not(.dragging)')];
+          const nextSibling = siblings.find(sibling => {
+            return e.clientX < sibling.getBoundingClientRect().right;
+          });
+          
+          if (nextSibling) {
+            tabBar.insertBefore(draggingTab, nextSibling);
+          } else {
+            tabBar.insertBefore(draggingTab, document.querySelector('.new-tab'));
+          }
+        }
+      });
+    }
+    
+    function saveUserPreferences() {
+      // In a real implementation, this would save to localStorage or a server
+      const preferences = {
+        darkMode: document.body.classList.contains('dark-mode'),
+        sidebarExpanded: document.querySelector('.sidebar').classList.contains('expanded')
+      };
+      
+      console.log('Saving preferences:', preferences);
+      localStorage.setItem('horizonBrowserPrefs', JSON.stringify(preferences));
+    }
+    
+    function loadUserPreferences() {
+      // In a real implementation, this would load from localStorage or a server
+      try {
+        const savedPrefs = localStorage.getItem('horizonBrowserPrefs');
+        if (savedPrefs) {
+          const preferences = JSON.parse(savedPrefs);
+          
+          if (preferences.darkMode) {
+            document.body.classList.add('dark-mode');
+          }
+          
+          if (preferences.sidebarExpanded) {
+            document.querySelector('.sidebar').classList.add('expanded');
+          }
+        }
+      } catch (err) {
+        console.error('Error loading preferences:', err);
+      }
+    }
+  </script>
+  
+  <style>
+    /* Additional styles for new components */
+    .focus-mode-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+    
+    .focus-mode-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    
+    .focus-mode-message {
+      background-color: var(--surface);
+      padding: 2rem;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 400px;
+    }
+    
+    .focus-mode-message h3 {
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+    
+    .focus-mode-message button {
+      margin-top: 1.5rem;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    
+    body.focus-mode .topbar,
+    body.focus-mode .sidebar,
+    body.focus-mode .tab-bar {
+      opacity: 0.1;
+      transition: opacity 0.3s ease;
+    }
+    
+    body.focus-mode .topbar:hover,
+    body.focus-mode .sidebar:hover,
+    body.focus-mode .tab-bar:hover {
+      opacity: 1;
+    }
+    
+    .tab-preview {
+      position: absolute;
+      width: 320px;
+      height: 200px;
+      background-color: var(--surface);
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      z-index: 100;
+      opacity: 0;
+      transform: translateY(-10px);
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    
+    .tab-preview.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .tab-preview-header {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .tab-preview-favicon {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      background-color: var(--primary);
+    }
+    
+    .tab-preview-content {
+      height: calc(100% - 40px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--background);
+    }
+    
+    .tab-preview-thumbnail {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    
+    .tab {
+      cursor: grab;
+      transition: transform 0.1s ease;
+    }
+    
+    .tab.dragging {
+      opacity: 0.7;
+      cursor: grabbing;
+      transform: scale(1.05);
+      z-index: 10;
+    }
+    
+    .browser-view.split-view {
+      display: flex;
+    }
+    
+    .browser-view.split-view .browser-frame {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+    }
+    
+    .browser-view.split-view .browser-frame:first-child::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      width: 4px;
+      background-color: var(--surface);
+      cursor: col-resize;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .create-workspace:hover {
+      animation: pulse 1s infinite;
+    }
+    
+    /* Command center enhancements */
+    .command-center {
+      z-index: 1001; /* Above everything else */
+    }
+    
+    .command-input {
+      transition: all 0.3s ease;
+      border: 2px solid var(--border);
+    }
+    
+    .command-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(58, 134, 255, 0.2);
+    }
+    
+    .command-item {
+      transition: all 0.2s ease;
+      margin-bottom: 4px;
+    }
+    
+    /* Modern scrollbar for all elements */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-secondary);
+    }
+    
+    /* Improved animations */
+    .fade-in {
+      animation: fadeIn 0.3s cubic-bezier(0.2, 0, 0.3, 1);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Better tab transitions */
+    .tab.active::before {
+      content: "";
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: var(--primary);
+      transform-origin: left;
+      animation: slideIn 0.2s cubic-bezier(0.2, 0, 0.3, 1);
+    }
+    
+    @keyframes slideIn {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+    
+    /* Improved responsive behavior */
+    @media (max-width: 768px) {
+      .topbar {
+        padding: 8px;
+      }
+      
+      .search-bar {
+        max-width: 60%;
+      }
+      
+      .sidebar {
+        width: 48px;
+      }
+      
+      .sidebar.expanded {
+        width: 180px;
+      }
+      
+      .command-center {
+        width: 90%;
+        max-width: 500px;
+      }
+    }
+  </style>
+</body>
+</html>

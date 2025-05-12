@@ -1,0 +1,62 @@
+.workspace-switcher {
+  width: 400px;
+  max-width: 90vw;
+  background: var(--surface);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  padding: 24px;
+  animation: slideIn 0.2s ease;
+}
+
+.workspace-switcher h2 {
+  margin-bottom: 16px;
+  font-size: 18px;
+}
+
+.workspace-list {
+  margin-bottom: 20px;
+}
+
+.workspace-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+  margin-bottom: 8px;
+}
+
+.workspace-item:hover {
+  background-color: var(--surface-hover);
+}
+
+.workspace-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  margin-right: 12px;
+  font-weight: 500;
+}
+
+.workspace-info {
+  flex-grow: 1;
+}
+
+.workspace-name {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.workspace-tabs {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.create-workspace-button {
+  width: 100%;
+}

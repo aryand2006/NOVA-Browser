@@ -1,0 +1,58 @@
+.command-center {
+  width: 600px;
+  max-width: 90vw;
+  background: var(--surface);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  animation: slideIn 0.2s ease;
+}
+
+.command-input {
+  width: 100%;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+  outline: none;
+  background: var(--surface);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+.command-results {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.command-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.command-item:hover {
+  background-color: var(--surface-hover);
+}
+
+.command-icon {
+  width: 24px;
+  margin-right: 12px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.command-text {
+  flex-grow: 1;
+  font-size: 14px;
+}
+
+.command-shortcut {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 2px 6px;
+  background: var(--background);
+  border-radius: 4px;
+  margin-left: 8px;
+}
