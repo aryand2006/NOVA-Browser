@@ -2,10 +2,6 @@
 
 **Navigate. Organize. Visualize. Achieve.**
 
-NOVA is a cutting-edge browser designed to redefine the web browsing experience. Combining minimalist aesthetics with AI-powered productivity tools, it provides a superior alternative to traditional browsers.
-
-## Description
-
 NOVA Browser is a modern web browsing platform that focuses on enhancing productivity through intelligent workspace management, AI-powered organization, and distraction-free interfaces. Unlike traditional browsers that treat tabs as linear collections, NOVA treats your browsing as contextual workspaces with smart, AI-driven organization that adapts to how you work.
 
 ## Core Philosophy
@@ -188,10 +184,6 @@ npm start
 
 This will launch the browser interface at `http://localhost:3000`.
 
-### Project Structure
-
-The React implementation is organized as follows:
-
 ### Creating a Real Browser Application
 
 To convert this concept into a working browser with a GUI, several components would need to be added:
@@ -210,30 +202,6 @@ To convert this concept into a working browser with a GUI, several components wo
    - GUI elements (address bar, navigation buttons, etc.)
    - Event handling
    - Process management
-
-### Recommended Next Steps
-
-If you want to develop a real browser with GUI:
-
-1. **Start with CEF (Chromium Embedded Framework)**:
-   ```bash
-   # Install CEF development packages (example for Ubuntu)
-   sudo apt-get install libcef-dev
-   
-   # Or download from: https://cef-builds.spotifycdn.com/index.html
-   ```
-
-2. **Create a Simple CEF Application**:
-   - Follow the CEF tutorials to create a basic browser window
-   - Gradually integrate the architecture from our concept code
-
-3. **Alternative: Use QtWebEngine**:
-   - QtWebEngine provides a Chromium-based web rendering engine with Qt integration
-   - Easier to work with than raw CEF if you're familiar with Qt
-
-4. **For Learning Purposes**:
-   - Consider starting with a simpler project using CEF's basic browser example
-   - Incrementally add features from our NOVA concept
 
 ## What's Next
 
